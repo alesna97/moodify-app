@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_player"
+        android:icon="@drawable/ic_album_black_24dp"
+        android:title="@string/Player"
+        android:fontFamily="@font/montserrat"/>
+
+    <item
+        android:id="@+id/navigation_songs"
+        android:icon="@drawable/ic_queue_music_black_24dp"
+        android:title="@string/Songs"
+        android:fontFamily="@font/montserrat"/>
+
+    <item
+        android:id="@+id/navigation_mood"
+        android:icon="@drawable/ic_mood_black_24dp"
+        android:title="@string/Mood"
+        android:fontFamily="@font/montserrat"/>
+</menu>
