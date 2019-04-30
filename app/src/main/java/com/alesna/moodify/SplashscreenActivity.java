@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+
 public class SplashscreenActivity extends AppCompatActivity {
 
     @Override
@@ -14,7 +16,7 @@ public class SplashscreenActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                startActivity(new Intent(SplashscreenActivity.this,MainActivity.class));
+                startActivity(new Intent(SplashscreenActivity.this, LoginActivity.class));
                 finish();
             }
         },5000);
