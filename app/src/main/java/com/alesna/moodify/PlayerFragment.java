@@ -1,23 +1,29 @@
 package com.alesna.moodify;
 
-
-import android.annotation.SuppressLint;
-import android.graphics.Color;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothProfile;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.widget.AppCompatImageButton;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.SeekBar;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Arrays;
+import java.util.Set;
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
 
 import com.github.ybq.android.spinkit.SpinKitView;
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -33,14 +39,11 @@ import com.spotify.android.appremote.api.error.SpotifyDisconnectedException;
 import com.spotify.android.appremote.api.error.SpotifyRemoteServiceException;
 import com.spotify.android.appremote.api.error.UnsupportedFeatureVersionException;
 import com.spotify.android.appremote.api.error.UserNotAuthorizedException;
-import com.spotify.protocol.client.ErrorCallback;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.Image;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Repeat;
 import com.yinglan.shadowimageview.ShadowImageView;
-
-import static android.content.ContentValues.TAG;
 
 
 /**
@@ -59,15 +62,44 @@ public class PlayerFragment extends Fragment {
     ShadowImageView mCoverImage;
     TrackProgressBar mTrackProgressBar;
     SpinKitView mSpinkitView;
+    Boolean device = false;
+    int mHeartRate;
 
-    private final ErrorCallback mErrorCallback = throwable -> Toast.makeText(getActivity().getApplicationContext(), "error",Toast.LENGTH_SHORT).show();
+    Boolean isListeningHeartRate = false;
 
+    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
+    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    public static final String STATUS = "STATUS_CONNECT";
+    BluetoothAdapter bluetoothAdapter;
+    BluetoothGatt bluetoothGatt;
+    BluetoothDevice bluetoothDevice;
+    TextView DeviceName;
+    TextView txtState, txtByte;
+    private String mDeviceName;
+    private String mDeviceAddress;
+    String status;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
+        initializeObjects();
+        //status = getArguments().getString("STATUS_CONNECT");
+        if(status == STATUS){
+            mDeviceName = getArguments().getString("name");
+            mDeviceAddress = getArguments().getString("add");
+            DeviceName.setText(mDeviceAddress);
+        }
+
         // Inflate the layout for this fragment
+
+
+
         View v = inflater.inflate(R.layout.fragment_player, container, false);
 
+        DeviceName = (TextView) v.findViewById(R.id.txtPhysicalAddress);
+        txtByte = (TextView) v.findViewById(R.id.txtByte);
+        //txtState = (TextView) v.findViewById(R.id.txtState);
         mConnectButton = (ImageButton) v.findViewById(R.id.ConnectButton);
         mConnectButton.setOnClickListener(this::onConnectButton);
         mPlaybutton = (ImageButton) v.findViewById(R.id.PlayButton);
@@ -97,6 +129,35 @@ public class PlayerFragment extends Fragment {
         mSeekBar = (SeekBar) v.findViewById(R.id.seekbar);
         mTrackProgressBar = new TrackProgressBar(mSeekBar);
         return v;
+    }
+
+    //WEARABLE DEVICE
+    void startConnecting() {
+
+        String address = DeviceName.getText().toString();
+        bluetoothDevice = bluetoothAdapter.getRemoteDevice("D0:09:EC:D2:81:5A");
+        Log.v("test", "Connecting to " + address);
+        Log.v("test", "Device name " + bluetoothDevice.getName());
+        DeviceName.setText(bluetoothDevice.getName());
+        bluetoothGatt = bluetoothDevice.connectGatt(getActivity().getApplicationContext(), true, bluetoothGattCallback);
+
+    }
+    void getBoundedDevice() {
+
+        mDeviceName = getArguments().getString("name");
+        mDeviceAddress = getArguments().getString("add");
+        DeviceName.setText(mDeviceAddress);
+
+        Set<BluetoothDevice> boundedDevice = bluetoothAdapter.getBondedDevices();
+        for (BluetoothDevice bd : boundedDevice) {
+            if (bd.getName().contains("MI Band 3")) {
+                DeviceName.setText(bd.getAddress());
+            }
+        }
+    }
+
+    void initializeObjects() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     protected void connect(){
@@ -225,13 +286,42 @@ public class PlayerFragment extends Fragment {
     //scan current mood
     public void onGetCurrentMood(View v){
         // Play a playlist
-        mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX86qIyFMUwi4");
+        //getBoundedDevice();
+        if (device == false){
+            Toast toast = Toast.makeText(getActivity().getApplicationContext(),"Connect Device First !", Toast.LENGTH_SHORT);
+            toast.show();
+        }else{
+            startScanHeartRate();
+        }
+
     }
 
     //connect wearable device
     public void onConnectButton(View v){
-        connect();
+        startConnecting();
+        device = true;
+        //Intent intent = new Intent(getActivity(), ScanDeviceActivity.class);
+        //startActivity(intent);
     }
+    void startScanHeartRate() {
+        txtByte.setText("Scanning");
+        BluetoothGattCharacteristic bchar = bluetoothGatt.getService(CustomBluetoothProfile.HeartRate.service)
+                .getCharacteristic(CustomBluetoothProfile.HeartRate.controlCharacteristic);
+        bchar.setValue(new byte[]{21, 2, 1});
+        bluetoothGatt.writeCharacteristic(bchar);
+
+    }
+
+    void listenHeartRate() {
+        BluetoothGattCharacteristic bchar = bluetoothGatt.getService(CustomBluetoothProfile.HeartRate.service)
+                .getCharacteristic(CustomBluetoothProfile.HeartRate.measurementCharacteristic);
+        bluetoothGatt.setCharacteristicNotification(bchar, true);
+        BluetoothGattDescriptor descriptor = bchar.getDescriptor(CustomBluetoothProfile.HeartRate.descriptor);
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        bluetoothGatt.writeDescriptor(descriptor);
+        isListeningHeartRate = true;
+    }
+
 
     public void onPlayPause(View v){
         mSpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(playerState -> {
@@ -381,4 +471,132 @@ public class PlayerFragment extends Fragment {
         super.onStart();
         connect();
     }
+
+
+    void stateConnected() {
+        bluetoothGatt.discoverServices();
+        //txtState.setText("Connected");
+    }
+
+    void stateDisconnected() {
+        bluetoothGatt.disconnect();
+    }
+
+
+    final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
+
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            super.onConnectionStateChange(gatt, status, newState);
+            Log.v("test", "onConnectionStateChange");
+
+            if (newState == android.bluetooth.BluetoothProfile.STATE_CONNECTED) {
+                stateConnected();
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                stateDisconnected();
+            }
+
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            Log.v("test", "onServicesDiscovered");
+            listenHeartRate();
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
+            Log.v("test", "onCharacteristicRead");
+            byte[] data = characteristic.getValue();
+            //String x = Arrays.toString(data);
+            byte[] slice = Arrays.copyOfRange(data, 1,2);
+            int value = slice[0];
+            txtByte.setText(Integer.toString(value));
+            mHeartRate = slice[0];
+            txtByte.setText(Integer.toString(mHeartRate));
+            //String trim = x.substring(x.lastIndexOf(",")+1, x.lastIndexOf("]"));
+            //txtByte.setText(trim);
+            //mHeartRate = Integer.parseInt(trim);
+            //txt.setText(mHeartRate);
+
+            if (mHeartRate >= 70 && mHeartRate <95){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX6wbVzPMSvwH");
+                DeviceName.setText("Bahagia");
+            }else if (mHeartRate >= 95 && mHeartRate <= 120){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX3rxVfibe1L0");
+                DeviceName.setText("arah");
+            }else if (mHeartRate >= 80 && mHeartRate <= 100){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX86qIyFMUwi4");
+                DeviceName.setText("Sedih");
+            }else if (mHeartRate >= 60 && mHeartRate <= 80){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DWTRkBYeInhLG");
+                DeviceName.setText("Rileks");
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            Log.v("test", "onCharacteristicWrite");
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicChanged(gatt, characteristic);
+            Log.v("test", "onCharacteristicChanged");
+            byte[] data = characteristic.getValue();
+            byte[] slice = Arrays.copyOfRange(data, 1,2);
+            int value = slice[0];
+            txtByte.setText(Integer.toString(value));
+            mHeartRate = slice[0];
+            txtByte.setText(Integer.toString(mHeartRate));
+
+            if (mHeartRate >= 70 && mHeartRate < 95){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX6wbVzPMSvwH");
+                DeviceName.setText("Bahagia");
+            }else if (mHeartRate >= 95 && mHeartRate <= 120){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX3rxVfibe1L0");
+                DeviceName.setText("Marah");
+            }else if (mHeartRate >= 80 && mHeartRate <= 100){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX86qIyFMUwi4");
+                DeviceName.setText("Sedih");
+            }else if (mHeartRate >= 60 && mHeartRate <= 80){
+                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DWTRkBYeInhLG");
+                DeviceName.setText("Rileks");
+            }
+        }
+
+        @Override
+        public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorRead(gatt, descriptor, status);
+            Log.v("test", "onDescriptorRead");
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorWrite(gatt, descriptor, status);
+            Log.v("test", "onDescriptorWrite");
+        }
+
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            super.onReliableWriteCompleted(gatt, status);
+            Log.v("test", "onReliableWriteCompleted");
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            super.onReadRemoteRssi(gatt, rssi, status);
+            Log.v("test", "onReadRemoteRssi");
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            super.onMtuChanged(gatt, mtu, status);
+            Log.v("test", "onMtuChanged");
+        }
+
+    };
 }

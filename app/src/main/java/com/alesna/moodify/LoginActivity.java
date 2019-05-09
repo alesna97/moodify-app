@@ -49,7 +49,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG_MESSAGE = "message";
 
     public final static String TAG_USERNAME = "username";
-    public final static String TAG_ID = "id";
+    public final static String TAG_ID = "id_user";
 
     String tag_json_obj = "json_obj_req";
 
