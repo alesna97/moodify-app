@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainMenuActivity"
+    android:background="@color/colorPrimary">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="200dp"
+            android:fontFamily="@font/monserrat_bold"
+            android:text="Welcome To"
+            android:textColor="@color/white"
+            android:textSize="20dp" />
+
+        <com.github.ybq.android.spinkit.SpinKitView xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/spin_kit"
+            style="@style/SpinKitView.Wave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:SpinKit_Color="@color/white"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/monserrat_bold"
+            android:text="Moodify"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:textSize="50dp" />
+
+
+        <Button
+            android:id="@+id/btn_login_main"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:background="@drawable/btn_pink_ripple"
+            android:fontFamily="@font/monserrat_bold"
+            android:text="Login"
+            android:textColor="@color/white"
+            android:layout_marginTop="20dp"/>
+        <Button
+            android:id="@+id/btn_daftar_main"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:background="@drawable/btn_pink_ripple"
+            android:fontFamily="@font/monserrat_bold"
+            android:text="Register"
+            android:textColor="@color/white"
+            android:layout_marginTop="10dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="huhuu:("
+            android:layout_marginTop="10dp"
+            android:textColor="@color/white"
+            android:layout_gravity="center"
+            android:fontFamily="@font/montserrat"/>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

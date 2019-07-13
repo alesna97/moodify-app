@@ -8,7 +8,9 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/container">
+        android:id="@+id/container"
+
+        >
 
     </FrameLayout>
     <android.support.design.widget.BottomNavigationView
@@ -17,7 +19,7 @@
         android:id="@+id/navigationView"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_gravity="start"
+        android:layout_gravity="bottom"
         android:layout_alignParentBottom="true"
         android:background="#ffffff"
         app:menu="@menu/menu" />

@@ -4,68 +4,74 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LoginActivity"
     android:background="@color/colorPrimary"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".LoginActivity">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="30dp"
+            android:fontFamily="@font/monserrat_bold"
             android:text="Moodify"
             android:textColor="@color/white"
-            android:fontFamily="@font/monserrat_bold"
-            android:textSize="20dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="30dp"/>
+            android:textSize="20dp" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:fontFamily="@font/monserrat_bold"
             android:text="Login"
             android:textColor="@color/white"
-            android:fontFamily="@font/monserrat_bold"
-            android:textSize="50dp"
-            android:layout_marginLeft="20dp"/>
+            android:textSize="50dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_margin="20dp">
+            android:layout_margin="20dp"
+            android:orientation="vertical">
+
             <EditText
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:hint="Username"
-                android:textColorHint="@color/white"
                 android:id="@+id/username"
-                android:fontFamily="@font/monserrat_bold"/>
-            <EditText
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:hint="Password"
-                android:textColorHint="@color/white"
+                android:fontFamily="@font/monserrat_bold"
+                android:hint="Username"
+                android:textColorHint="@color/white" />
+
+            <EditText
                 android:id="@+id/password"
-                android:inputType="textPassword"
-                android:fontFamily="@font/monserrat_bold"
-                />
-            <Button
-                android:layout_width="150dp"
+                android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:text="Login"
                 android:fontFamily="@font/monserrat_bold"
-                android:textColor="@color/white"
-                android:background="@drawable/rounded_btn"
+                android:hint="Password"
+                android:inputType="textPassword"
+                android:textColorHint="@color/white" />
+
+            <Button
                 android:id="@+id/btn_login"
-                android:layout_gravity="end"/>
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@drawable/btn_pink_ripple"
+                android:fontFamily="@font/monserrat_bold"
+                android:text="Login"
+                android:textColor="@color/white" />
 
         </LinearLayout>
     </LinearLayout>
 
     <TextView
+        android:id="@+id/btn_txdaftar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="50dp"
         android:clickable="true"
@@ -76,7 +82,5 @@
         android:textColor="@color/white"
         android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:id="@+id/btn_txdaftar"
-        />
+        app:layout_constraintEnd_toEndOf="parent" />
 </android.support.constraint.ConstraintLayout>

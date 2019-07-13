@@ -3,15 +3,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".SongsFragment">
-    <com.github.ybq.android.spinkit.SpinKitView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/spin_kit_song"
-        style="@style/SpinKitView.Wave"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        app:SpinKit_Color="@color/colorPrimary"
-        android:visibility="invisible"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="50px"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="420px"
+                android:layout_height="420px"
+                android:id="@+id/imgcover"
+                android:src="@drawable/ic_music_note_black_24dp"
+                android:layout_marginTop="80dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="playlist_title"
+                    android:id="@+id/text"
+                    android:textSize="20dp"
+                    android:fontFamily="@font/montserrat"
+                    android:textColor="@color/colorAccent"
+                    android:layout_marginBottom="50dp"/>
+
+        </LinearLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:id="@+id/rvPlaylistTrack"
+            android:foreground="@drawable/custom_ripple"/>
+
+    </LinearLayout>
 
 </FrameLayout>

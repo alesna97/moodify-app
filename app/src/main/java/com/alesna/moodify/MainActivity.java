@@ -9,11 +9,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.greenrobot.eventbus.EventBus;
+
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener{
 
@@ -27,13 +33,22 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     public static final String STATUS = "STATUS_CONNECT";
 
     private BluetoothAdapter mBluetoothAdapter;
+    private static final String TAG = "MainActivity";
 
+    final Fragment fragment1 = new PlayerFragment();
+    final Fragment fragment2 = new SongsFragment();
+    final Fragment fragment3 = new MoodFragment();
+    final FragmentManager fm = getSupportFragmentManager();
+    Fragment active = fragment1;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-        loadFragment(new PlayerFragment());
+
+        fm.beginTransaction().add(R.id.container, fragment3, "3").hide(fragment3).commit();
+        fm.beginTransaction().add(R.id.container, fragment2, "2").hide(fragment2).commit();
+        fm.beginTransaction().add(R.id.container,fragment1, "1").commit();
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.navigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
@@ -55,47 +70,36 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
 
     }
-    private boolean loadFragment(Fragment fragment) {
-        if (fragment != null) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .commit();
-            return true;
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.navigation_player:
+                fm.beginTransaction().hide(active).show(fragment1).commit();
+                active = fragment1;
+                return true;
+
+            case R.id.navigation_songs:
+                fm.beginTransaction().hide(active).show(fragment2).commit();
+                active = fragment2;
+                return true;
+
+            case R.id.navigation_mood:
+                fm.beginTransaction().hide(active).show(fragment3).commit();
+                active = fragment3;
+                return true;
         }
         return false;
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        Fragment fragment = null;
-        switch (item.getItemId()){
-            case R.id.navigation_player:
-                fragment = new PlayerFragment();
-                break;
-            case R.id.navigation_songs:
-                fragment = new SongsFragment();
-                break;
-            case R.id.navigation_mood:
-                fragment = new MoodFragment();
-                break;
 
-        }
-        return loadFragment(fragment);
-    }
 
-    public void logout(View v){
-        SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putBoolean(LoginActivity.session_status, false);
-        editor.putString(TAG_ID, null);
-        editor.putString(TAG_USERNAME, null);
-        editor.commit();
-
-        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-        finish();
-        startActivity(intent);
-    }
     @Override
     public void onStart() {
         super.onStart();
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 }

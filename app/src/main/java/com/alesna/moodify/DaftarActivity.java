@@ -7,8 +7,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,12 +14,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.alesna.moodify.app.Server;
+import com.alesna.moodify.service.Server;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.alesna.moodify.app.AppController;
+import com.alesna.moodify.service.AppController;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -180,6 +176,4 @@ public class DaftarActivity extends AppCompatActivity {
         finish();
         startActivity(intent);
     }
-
-
 }

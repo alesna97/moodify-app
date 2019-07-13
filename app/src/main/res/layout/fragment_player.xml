@@ -137,7 +137,7 @@
                     android:id="@+id/ShuffleButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_shuffle"
                     android:layout_gravity="center"
                     android:layout_margin="5dp"
@@ -147,7 +147,7 @@
                     android:id="@+id/PrevButton"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_prev"
                     android:layout_gravity="center"
                     android:layout_margin="5dp"/>
@@ -156,7 +156,7 @@
                     android:id="@+id/PlayButton"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:background="@drawable/rounded_pink"
+                    android:background="@drawable/btn_pink_ripple_2"
                     android:src="@drawable/btn_play"
                     android:layout_gravity="center"
                     android:layout_margin="5dp"/>
@@ -165,7 +165,7 @@
                     android:id="@+id/NextButton"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_next"
                     android:layout_gravity="center"
                     android:layout_margin="5dp"/>
@@ -173,7 +173,7 @@
                     android:id="@+id/RepeatButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_repeat"
                     android:layout_gravity="center"
                     android:layout_margin="5dp"/>
@@ -188,7 +188,7 @@
                     android:id="@+id/ConnectButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_connect"
                     android:layout_margin="5dp"/>
 
@@ -196,7 +196,7 @@
                     android:id="@+id/PauseButton"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:background="@drawable/rounded"
+                    android:background="@drawable/btn_ripple"
                     android:src="@drawable/btn_scan"
                     android:layout_margin="5dp"/>
 

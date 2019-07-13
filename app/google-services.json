@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "72573248592",
+    "firebase_url": "https://skripshit-3353d.firebaseio.com",
+    "project_id": "skripshit-3353d",
+    "storage_bucket": "skripshit-3353d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72573248592:android:86029c1d53f3d4aa",
+        "android_client_info": {
+          "package_name": "com.alesna.moodify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72573248592-hs712bck1ulrsjsqtcini77a8a25ihrq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alesna.moodify",
+            "certificate_hash": "f8a15fbde3366daa83e24e49e794a7c271032ddc"
+          }
+        },
+        {
+          "client_id": "72573248592-e2murl194caeiav8qj1pl7spcn93ha6b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoAQ2g3mSE0eBUcznDxVFCarVMD2DNqnI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72573248592-e2murl194caeiav8qj1pl7spcn93ha6b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

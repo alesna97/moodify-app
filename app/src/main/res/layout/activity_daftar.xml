@@ -86,9 +86,9 @@
             <Button
                 android:id="@+id/btn_daftar"
                 android:layout_width="150dp"
-                android:layout_height="50dp"
+                android:layout_height="40dp"
                 android:layout_gravity="end"
-                android:background="@drawable/rounded_btn"
+                android:background="@drawable/btn_pink_ripple"
                 android:fontFamily="@font/monserrat_bold"
                 android:text="Daftar"
                 android:textColor="@color/white" />

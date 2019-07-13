@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,6 +23,11 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.alesna.moodify.service.ConnWearableEvent;
+import com.alesna.moodify.service.MessageEvent;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -43,10 +49,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scan_device);
         getSupportActionBar().setTitle("Choose Device");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         listView = (ListView) findViewById(R.id.listView);
-
-
         mHandler = new Handler();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -105,7 +108,6 @@ public class ScanDeviceActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (!mBluetoothAdapter.isEnabled()) {
@@ -118,24 +120,20 @@ public class ScanDeviceActivity extends AppCompatActivity {
         // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         listView.setAdapter(mLeDeviceListAdapter);
+
         listView.setOnItemClickListener((adapterView, view, i, l) -> {
             final BluetoothDevice device = mLeDeviceListAdapter.getDevice(i);
             if (device == null) return;
             final Intent intent = new Intent(ScanDeviceActivity.this, MainActivity.class);
-            intent.putExtra(MainActivity.EXTRAS_DEVICE_NAME, device.getName());
-            intent.putExtra(MainActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-            intent.putExtra(MainActivity.STATUS, "1");
-            intent.putExtra("device", device);
-            Bundle bundle = new Bundle();
-            bundle.putString("name", device.getName());
-            bundle.putString("add", device.getAddress());
-            bundle.putString("status", "1");
-            PlayerFragment playerFragment = new PlayerFragment();
-            playerFragment.setArguments(bundle);
+
+            EventBus.getDefault().postSticky(new ConnWearableEvent(device.getAddress(),device.getName()));
+
+            Log.d("TEST",device.getAddress() + " " + device.getName());
             if (mScanning) {
                 mBluetoothAdapter.stopLeScan(mLeScanCallback);
                 mScanning = false;
             }
+            finish();
             startActivity(intent);
         });
         scanLeDevice(true);
@@ -154,6 +152,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        EventBus.getDefault().unregister(this);
         scanLeDevice(false);
         mLeDeviceListAdapter.clear();
     }

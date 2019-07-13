@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -25,6 +27,10 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 
+import com.alesna.moodify.model.Preferences;
+import com.alesna.moodify.service.ConnWearableEvent;
+import com.alesna.moodify.service.MessageEvent;
+import com.alesna.moodify.service.Mood;
 import com.github.ybq.android.spinkit.SpinKitView;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -44,6 +50,10 @@ import com.spotify.protocol.types.Image;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Repeat;
 import com.yinglan.shadowimageview.ShadowImageView;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 
 /**
@@ -78,11 +88,11 @@ public class PlayerFragment extends Fragment {
     private String mDeviceName;
     private String mDeviceAddress;
     String status;
+    String device_name;
+    String device_address;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-
         initializeObjects();
         //status = getArguments().getString("STATUS_CONNECT");
         if(status == STATUS){
@@ -90,11 +100,7 @@ public class PlayerFragment extends Fragment {
             mDeviceAddress = getArguments().getString("add");
             DeviceName.setText(mDeviceAddress);
         }
-
         // Inflate the layout for this fragment
-
-
-
         View v = inflater.inflate(R.layout.fragment_player, container, false);
 
         DeviceName = (TextView) v.findViewById(R.id.txtPhysicalAddress);
@@ -114,7 +120,6 @@ public class PlayerFragment extends Fragment {
         mRepeatButton.setOnClickListener(this::onSetRepeat);
         mShuffleButton = (ImageButton) v.findViewById(R.id.ShuffleButton);
         mShuffleButton.setOnClickListener(this::onSetShuffle);
-
         nowPlaying = (TextView) v.findViewById(R.id.NowPlaying);
         mArtist = (TextView) v.findViewById(R.id.Artist);
         mTitle = (TextView) v.findViewById(R.id.Title);
@@ -122,9 +127,7 @@ public class PlayerFragment extends Fragment {
         mStatus = (TextView) v.findViewById(R.id.Status);
         mStartDuration = (TextView) v.findViewById(R.id.startDuration);
         mEndDuration = (TextView) v.findViewById(R.id.endDuration);
-
         mSpinkitView = (SpinKitView) v.findViewById(R.id.spin_kit);
-
         mCoverImage = (ShadowImageView) v.findViewById(R.id.CoverImage);
         mSeekBar = (SeekBar) v.findViewById(R.id.seekbar);
         mTrackProgressBar = new TrackProgressBar(mSeekBar);
@@ -132,16 +135,20 @@ public class PlayerFragment extends Fragment {
     }
 
     //WEARABLE DEVICE
-    void startConnecting() {
-
-        String address = DeviceName.getText().toString();
-        bluetoothDevice = bluetoothAdapter.getRemoteDevice("D0:09:EC:D2:81:5A");
-        Log.v("test", "Connecting to " + address);
-        Log.v("test", "Device name " + bluetoothDevice.getName());
-        DeviceName.setText(bluetoothDevice.getName());
-        bluetoothGatt = bluetoothDevice.connectGatt(getActivity().getApplicationContext(), true, bluetoothGattCallback);
-
+    void startConnecting(String device_name,String device_address) {
+        //if(device_name == "MI Band 3") {
+            device = true;
+            bluetoothDevice = bluetoothAdapter.getRemoteDevice(device_address);
+            Log.v("test", "Connecting to " + device_name);
+            Log.v("test", "Device name " + bluetoothDevice.getName());
+            DeviceName.setText(bluetoothDevice.getName());
+            bluetoothGatt = bluetoothDevice.connectGatt(getActivity().getApplicationContext(), true, bluetoothGattCallback);
+        //}else{
+          //  Toast toast = Toast.makeText(getActivity().getApplicationContext(),"Wrong Device !", Toast.LENGTH_SHORT);
+          //  toast.show();
+        //}
     }
+
     void getBoundedDevice() {
 
         mDeviceName = getArguments().getString("name");
@@ -287,21 +294,24 @@ public class PlayerFragment extends Fragment {
     public void onGetCurrentMood(View v){
         // Play a playlist
         //getBoundedDevice();
-        if (device == false){
+        if (!device){
             Toast toast = Toast.makeText(getActivity().getApplicationContext(),"Connect Device First !", Toast.LENGTH_SHORT);
             toast.show();
         }else{
             startScanHeartRate();
         }
-
     }
 
     //connect wearable device
     public void onConnectButton(View v){
-        startConnecting();
-        device = true;
-        //Intent intent = new Intent(getActivity(), ScanDeviceActivity.class);
-        //startActivity(intent);
+        //startConnecting();
+        //device = true;
+        if(this.device_name == null){
+            Intent intent = new Intent(getActivity(), ScanDeviceActivity.class);
+            startActivity(intent);
+        }else{
+            stateDisconnected();
+        }
     }
     void startScanHeartRate() {
         txtByte.setText("Scanning");
@@ -309,7 +319,6 @@ public class PlayerFragment extends Fragment {
                 .getCharacteristic(CustomBluetoothProfile.HeartRate.controlCharacteristic);
         bchar.setValue(new byte[]{21, 2, 1});
         bluetoothGatt.writeCharacteristic(bchar);
-
     }
 
     void listenHeartRate() {
@@ -466,11 +475,7 @@ public class PlayerFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        connect();
-    }
+
 
 
     void stateConnected() {
@@ -480,6 +485,7 @@ public class PlayerFragment extends Fragment {
 
     void stateDisconnected() {
         bluetoothGatt.disconnect();
+        txtState.setText("Disconnected From Device");
     }
 
 
@@ -508,7 +514,7 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            Log.v("test", "onCharacteristicRead");
+            //Log.v("test", "onCharacteristicRead");
             byte[] data = characteristic.getValue();
             //String x = Arrays.toString(data);
             byte[] slice = Arrays.copyOfRange(data, 1,2);
@@ -519,21 +525,14 @@ public class PlayerFragment extends Fragment {
             //String trim = x.substring(x.lastIndexOf(",")+1, x.lastIndexOf("]"));
             //txtByte.setText(trim);
             //mHeartRate = Integer.parseInt(trim);
-            //txt.setText(mHeartRate);
-
-            if (mHeartRate >= 70 && mHeartRate <95){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX6wbVzPMSvwH");
-                DeviceName.setText("Bahagia");
-            }else if (mHeartRate >= 95 && mHeartRate <= 120){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX3rxVfibe1L0");
-                DeviceName.setText("arah");
-            }else if (mHeartRate >= 80 && mHeartRate <= 100){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX86qIyFMUwi4");
-                DeviceName.setText("Sedih");
-            }else if (mHeartRate >= 60 && mHeartRate <= 80){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DWTRkBYeInhLG");
-                DeviceName.setText("Rileks");
-            }
+            //txt.setText(mHeartRate)
+            Mood mood = new Mood();
+            mood.getMoodResult(mHeartRate);
+            DeviceName.setText(mood.getMood());
+            Preferences.clearPlaylistID(getContext());
+            Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
+            EventBus.getDefault().post(new MessageEvent(mood.getPlaylist_uri()));
+            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
         }
 
         @Override
@@ -552,20 +551,13 @@ public class PlayerFragment extends Fragment {
             txtByte.setText(Integer.toString(value));
             mHeartRate = slice[0];
             txtByte.setText(Integer.toString(mHeartRate));
-
-            if (mHeartRate >= 70 && mHeartRate < 95){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX6wbVzPMSvwH");
-                DeviceName.setText("Bahagia");
-            }else if (mHeartRate >= 95 && mHeartRate <= 120){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX3rxVfibe1L0");
-                DeviceName.setText("Marah");
-            }else if (mHeartRate >= 80 && mHeartRate <= 100){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DX86qIyFMUwi4");
-                DeviceName.setText("Sedih");
-            }else if (mHeartRate >= 60 && mHeartRate <= 80){
-                mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:37i9dQZF1DWTRkBYeInhLG");
-                DeviceName.setText("Rileks");
-            }
+            Mood mood = new Mood();
+            mood.getMoodResult(mHeartRate);
+            DeviceName.setText(mood.getMood());
+            Preferences.clearPlaylistID(getContext());
+            Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
+            EventBus.getDefault().post(new MessageEvent(mood.getPlaylist_uri()));
+            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
         }
 
         @Override
@@ -599,4 +591,26 @@ public class PlayerFragment extends Fragment {
         }
 
     };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        connect();
+        EventBus.getDefault().register(this);
+    }
+
+    // UI updates must run on MainThread
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onEvent(ConnWearableEvent event) {
+        this.device_address = event.getMac_address();
+        this.device_name = event.getDevice_name();
+        txtByte.setText(this.device_name);
+        startConnecting(event.getDevice_name(),event.getMac_address());
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
 }
