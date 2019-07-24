@@ -4,6 +4,7 @@ public class ClientCredentials {
 
     private static final String CLIENT_ID = "0b8bdd412f544defb36bb6bb19f5f2a7";
     private static final String REDIRECT_URI = "com.alesna.moodify://callback";
+    private static final String API_KEY = "kmzway87aamoodify";
     private static final int REQUEST_CODE = 1337;
     private static final String CLIENT_SECRET = "bf9b291f83f84dc1997011861d44cf61";
     public static int getRequestCode() {
@@ -20,5 +21,9 @@ public class ClientCredentials {
 
     public static String getClientSecret() {
         return CLIENT_SECRET;
+    }
+
+    public static String getApiKey() {
+        return API_KEY;
     }
 }

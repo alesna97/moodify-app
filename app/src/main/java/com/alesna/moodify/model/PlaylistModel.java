@@ -8,7 +8,6 @@ public class PlaylistModel {
 
     private String artist,song,playlist_id,track_id,duration,album_url;
 
-
     public PlaylistModel(String song,String artist,String duration,String album_url){
         this.song = song;
         this.artist = artist;
@@ -20,9 +19,7 @@ public class PlaylistModel {
         this.album_url = album_url;
     }
 
-    public String getAlbum_url() {
-        return album_url;
-    }
+    public String getAlbum_url() { return album_url; }
 
     public String getArtist() {
         return artist;
@@ -44,10 +41,7 @@ public class PlaylistModel {
         this.artist = artist;
     }
 
-    public void setDuration(String duration) {
-
-        this.duration = duration;
-    }
+    public void setDuration(String duration) { this.duration = duration; }
 
     public void setTrack(String song) {
         this.song = song;

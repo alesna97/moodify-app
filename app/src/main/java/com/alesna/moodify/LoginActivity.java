@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alesna.moodify.model.Preferences;
 import com.alesna.moodify.service.Server;
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
@@ -138,7 +139,7 @@ public class LoginActivity extends AppCompatActivity {
                 // Check for error node in json
                 if (success == 1) {
                     String username1 = jObj.getString(TAG_USERNAME);
-                    //String id = jObj.getString(TAG_ID);
+                    String id = jObj.getString(TAG_ID);
 
                     Log.e("Successfully Login!", jObj.toString());
 
@@ -148,12 +149,13 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putBoolean(session_status, true);
                     //editor.putString(TAG_ID, id);
+                    Preferences.setIdUser(this, id);
                     editor.putString(TAG_USERNAME, username1);
                     editor.commit();
 
                     // Memanggil main activity
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    //intent.putExtra(TAG_ID, id);
+                    intent.putExtra(TAG_ID, id);
                     intent.putExtra(TAG_USERNAME, username1);
                     finish();
                     startActivity(intent);

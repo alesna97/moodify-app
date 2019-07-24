@@ -15,31 +15,45 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.alesna.moodify.model.ClientCredentials;
+import com.alesna.moodify.model.AuthToken;
+import com.alesna.moodify.model.Preferences;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.spotify.sdk.android.authentication.AuthenticationClient;
+import com.spotify.sdk.android.authentication.AuthenticationRequest;
+import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import org.greenrobot.eventbus.EventBus;
 
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.UserPrivate;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener{
 
     String id, username,status;
     SharedPreferences sharedpreferences;
-
+    private String mToken, KEY_AUTH_TOKEN = "token";
     public static final String TAG_ID = "id_user";
     public static final String TAG_USERNAME = "username";
-    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
-    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String STATUS = "STATUS_CONNECT";
-
     private BluetoothAdapter mBluetoothAdapter;
-    private static final String TAG = "MainActivity";
-
+    ClientCredentials client = new ClientCredentials();
     final Fragment fragment1 = new PlayerFragment();
     final Fragment fragment2 = new SongsFragment();
     final Fragment fragment3 = new MoodFragment();
     final FragmentManager fm = getSupportFragmentManager();
     Fragment active = fragment1;
+    ProgressBar progressbar;
+    String TAG = "FIREBASE MESSAGING";
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         id = getIntent().getStringExtra(TAG_ID);
         username = getIntent().getStringExtra(TAG_USERNAME);
 
+        authToSpotify();
+        getAuthToken();
 
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -68,7 +84,27 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             finish();
             return;
         }
+        getFCMToken();
+    }
 
+    public void getFCMToken (){
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            Log.d("FCMTOKEN", "getInstanceId failed", task.getException());
+                            return;
+                        }
+                        // Get new Instance ID token
+                        String token = task.getResult().getToken();
+                        // Log and toast
+                        String msg = getString(R.string.msg_token_fmt, token);
+                        Log.d(TAG, msg);
+                        Log.d("test", token);
+                        Preferences.setFcmToken(getApplicationContext(),token);
+                    }
+                });
     }
 
     @Override
@@ -92,7 +128,44 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         return false;
     }
 
+    private void authToSpotify(){
+        final AuthenticationRequest request =
+                new AuthenticationRequest.Builder(client.getClientId(), AuthenticationResponse.Type.TOKEN, client.getRedirectUri())
+                        .setScopes(new String[]{"user-read-private", "playlist-read", "playlist-read-private", "streaming","user-read-email","user-read-birthdate"})
+                        .build();
+        Intent intent = AuthenticationClient.createLoginActivityIntent(this, request);
+        startActivityForResult(intent, client.getRequestCode());
+    }
 
+    public SpotifyService getAuthToken(){
+        SharedPreferences newToken = this.getSharedPreferences("token", Context.MODE_PRIVATE);
+        mToken = newToken.getString(KEY_AUTH_TOKEN,null);
+        AuthToken authToken = new AuthToken(mToken);
+        EventBus.getDefault().postSticky(authToken);
+        return authToken.spotifyService();
+    }
+
+    public  void onActivityResult(int requestCode, int resultCode, Intent intent){
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        if (requestCode == client.getRequestCode()){
+            AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
+            switch (response.getType()){
+                case TOKEN:
+                    SharedPreferences newToken = this.getSharedPreferences("token", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = newToken.edit();
+                    editor.putString(KEY_AUTH_TOKEN, response.getAccessToken());
+                    editor.apply();
+                    break;
+                case ERROR:
+                    Toast toast = Toast.makeText(this.getApplicationContext(), response.getError(), Toast.LENGTH_SHORT);
+                    toast.show();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 
     @Override
     public void onStart() {

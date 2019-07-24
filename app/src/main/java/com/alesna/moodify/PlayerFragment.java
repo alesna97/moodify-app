@@ -8,15 +8,13 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 import android.os.Bundle;
-import android.preference.Preference;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -27,9 +25,15 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 
+import com.alesna.moodify.adapter.historyMoodAdapter;
+import com.alesna.moodify.model.FcmModel;
+import com.alesna.moodify.model.HistoryMoodModel;
+import com.alesna.moodify.model.MoodMoodifyModel;
 import com.alesna.moodify.model.Preferences;
+import com.alesna.moodify.service.ApiClient;
 import com.alesna.moodify.service.ConnWearableEvent;
-import com.alesna.moodify.service.MessageEvent;
+import com.alesna.moodify.service.MoodifyService;
+import com.alesna.moodify.service.PlaylistIdEvent;
 import com.alesna.moodify.service.Mood;
 import com.github.ybq.android.spinkit.SpinKitView;
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -55,6 +59,10 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -74,7 +82,6 @@ public class PlayerFragment extends Fragment {
     SpinKitView mSpinkitView;
     Boolean device = false;
     int mHeartRate;
-
     Boolean isListeningHeartRate = false;
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
@@ -308,6 +315,7 @@ public class PlayerFragment extends Fragment {
         //device = true;
         if(this.device_name == null){
             Intent intent = new Intent(getActivity(), ScanDeviceActivity.class);
+            getActivity().finish();
             startActivity(intent);
         }else{
             stateDisconnected();
@@ -475,19 +483,52 @@ public class PlayerFragment extends Fragment {
         }
     }
 
-
-
-
     void stateConnected() {
         bluetoothGatt.discoverServices();
         //txtState.setText("Connected");
     }
 
-    void stateDisconnected() {
-        bluetoothGatt.disconnect();
-        txtState.setText("Disconnected From Device");
+    public void postMood(String id_user, String id_mood, String heart_rate){
+        MoodifyService service = ApiClient.retrofitClient().create(MoodifyService.class);
+        Call<MoodMoodifyModel> call = service.PostMood(id_user,id_mood,heart_rate);
+        call.enqueue(new Callback<MoodMoodifyModel>() {
+            @Override
+            public void onResponse(Call<MoodMoodifyModel> call, Response<MoodMoodifyModel> response) {
+                MoodMoodifyModel res = response.body();
+                if(response.isSuccessful()){
+                    Log.d("test", res.getMessage());
+                }else{
+                    Log.d("test", res.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MoodMoodifyModel> call, Throwable t) {
+                Log.d("test", t.getMessage());
+            }
+        });
     }
 
+    public void sendNotification(String heart_rate,String id_mood){
+        MoodifyService service = ApiClient.retrofitClient().create(MoodifyService.class);
+        Call<FcmModel> call = service.sendFcmNotification(Preferences.getFcmToken(getContext()),heart_rate,id_mood);
+        call.enqueue(new Callback<FcmModel>() {
+            @Override
+            public void onResponse(Call<FcmModel> call, Response<FcmModel> response) {
+                if(response.isSuccessful()){
+                    Log.d("test",response.body().getSuccess());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FcmModel> call, Throwable t) {
+
+            }
+        });
+    }
+    void stateDisconnected() {
+        bluetoothGatt.disconnect();
+    }
 
     final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
 
@@ -522,17 +563,14 @@ public class PlayerFragment extends Fragment {
             txtByte.setText(Integer.toString(value));
             mHeartRate = slice[0];
             txtByte.setText(Integer.toString(mHeartRate));
-            //String trim = x.substring(x.lastIndexOf(",")+1, x.lastIndexOf("]"));
-            //txtByte.setText(trim);
-            //mHeartRate = Integer.parseInt(trim);
-            //txt.setText(mHeartRate)
             Mood mood = new Mood();
             mood.getMoodResult(mHeartRate);
+            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
             DeviceName.setText(mood.getMood());
             Preferences.clearPlaylistID(getContext());
             Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
-            EventBus.getDefault().post(new MessageEvent(mood.getPlaylist_uri()));
-            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
+            EventBus.getDefault().post(new PlaylistIdEvent(mood.getPlaylist_uri()));
+            postMood(Preferences.getIdUser(getContext()),mood.getMood(),String.valueOf(mHeartRate));
         }
 
         @Override
@@ -553,11 +591,14 @@ public class PlayerFragment extends Fragment {
             txtByte.setText(Integer.toString(mHeartRate));
             Mood mood = new Mood();
             mood.getMoodResult(mHeartRate);
+            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
+            Log.d("test",Preferences.getFcmToken(getContext()));
+            sendNotification(String.valueOf(mHeartRate),mood.getMood());
             DeviceName.setText(mood.getMood());
             Preferences.clearPlaylistID(getContext());
             Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
-            EventBus.getDefault().post(new MessageEvent(mood.getPlaylist_uri()));
-            mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
+            EventBus.getDefault().post(new PlaylistIdEvent(mood.getPlaylist_uri()));
+            postMood(Preferences.getIdUser(getContext()),mood.getMood(),String.valueOf(mHeartRate));
         }
 
         @Override

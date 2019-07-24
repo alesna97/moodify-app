@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import static com.alesna.moodify.LoginActivity.my_shared_preferences;
-import static com.alesna.moodify.LoginActivity.session_status;
 
 public class MainMenuActivity extends AppCompatActivity {
     Button login,register;

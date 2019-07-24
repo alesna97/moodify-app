@@ -1,9 +1,5 @@
 package com.alesna.moodify.adapter;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -14,10 +10,6 @@ import android.widget.TextView;
 import com.alesna.moodify.R;
 import com.alesna.moodify.model.PlaylistModel;
 import com.squareup.picasso.Picasso;
-import com.yinglan.shadowimageview.ShadowImageView;
-
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class playlistAdapter extends RecyclerView.Adapter<playlistAdapter.PlaylistViewHolder> {
@@ -40,7 +32,6 @@ public class playlistAdapter extends RecyclerView.Adapter<playlistAdapter.Playli
         holder.trackName.setText(dataList.get(position).getTrack());
         holder.trackDuration.setText(dataList.get(position).getDuration().toString());
         holder.trackArtist.setText(dataList.get(position).getArtist());
-        //holder.album.setImageBitmap(dataList.get(position).getAlbum_url());
         Picasso.get().load(dataList.get(position).getAlbum_url()).into(holder.album);
 
     }

@@ -21,28 +21,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-
-        /*Log.d(TAG, "From: " + remoteMessage.getFrom());
-
+        Log.d(TAG, "From: " + remoteMessage.getFrom());
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
-
         }
-
-        // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
-
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-        }*/
+        }
         sendNotification(remoteMessage.getNotification().getTitle(), remoteMessage.getNotification().getBody());
-
     }
 
     @Override
     public void onNewToken(String token) {
         super.onNewToken(token);
-        Log.d("TOKENFIREBASE", token);
+        Log.d(TAG, token);
         sendRegistrationToServer(token);
     }
 
@@ -82,7 +74,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     NotificationManager.IMPORTANCE_DEFAULT);
             notificationManager.createNotificationChannel(channel);
         }
-
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 }
