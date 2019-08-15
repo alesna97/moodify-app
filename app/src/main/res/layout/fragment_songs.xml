@@ -45,7 +45,7 @@
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="444dp"
             android:id="@+id/rvPlaylistTrack"
             android:foreground="@drawable/custom_ripple"/>
 

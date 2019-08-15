@@ -1,12 +1,12 @@
 package com.alesna.moodify;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+
+import com.alesna.moodify.model.Preferences;
 
 
 public class MainMenuActivity extends AppCompatActivity {
@@ -14,12 +14,8 @@ public class MainMenuActivity extends AppCompatActivity {
     public final static String TAG_ID = "id_user";
     public final static String TAG_USERNAME = "username";
 
-    SharedPreferences sharedPreferences;
     Boolean session = false;
-
     String id, username;
-    public static final String my_shared_preferences = "my_shared_preferences";
-    public static final String session_status = "session_status";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,9 +28,9 @@ public class MainMenuActivity extends AppCompatActivity {
         login.setOnClickListener(this::onLoginCick);
         register.setOnClickListener(this::onRegisterCick);
         //cek session
-        sharedPreferences = getSharedPreferences(my_shared_preferences, Context.MODE_PRIVATE);
-        session = sharedPreferences.getBoolean(session_status, false);
-        id = sharedPreferences.getString(TAG_ID, null);
+        session = Preferences.getSession(this);
+        id = Preferences.getIdUser(this);
+        username = Preferences.getUsername(this);
 
         if (session){
             Intent intent = new Intent(MainMenuActivity.this, MainActivity.class);

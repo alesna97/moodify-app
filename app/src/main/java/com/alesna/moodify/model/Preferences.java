@@ -10,6 +10,9 @@ public class Preferences {
     static final String ID_USER = "id_user";
     static final String FCM_TOKEN = "fcm_token";
     static final String USERNAME = "username";
+    static final String SPOTIFY_TOKEN = "token";
+    public static final String session_status = "session_status";
+    public static final String first_time = "first_time";
 
     public static SharedPreferences getSharedPreferences( Context context){
         return PreferenceManager.getDefaultSharedPreferences(context);
@@ -85,7 +88,42 @@ public class Preferences {
 
     }
 
+    // SPOTIFY TOKEN
+    public static String getSpotifyToken(Context context){
+        return getSharedPreferences(context).getString(SPOTIFY_TOKEN,"");
+    }
 
+    public static void clearSpotifyToken(Context context){
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.remove(SPOTIFY_TOKEN);
+    }
+
+    public static void setSpotiftoken(Context context, String token){
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putString(SPOTIFY_TOKEN,token);
+        editor.apply();
+
+    }
+
+    // SESSION
+    public static Boolean getSession(Context context){
+        return getSharedPreferences(context).getBoolean(session_status, false);
+    }
+
+    public static void clearSession(Context context){
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putBoolean(session_status,false);
+        editor.remove(session_status);
+        editor.clear();
+        editor.commit();
+    }
+
+    public static void setSession(Context context, Boolean status){
+        SharedPreferences.Editor editor = getSharedPreferences(context).edit();
+        editor.putBoolean(session_status,status);
+        editor.apply();
+
+    }
 
 
 }

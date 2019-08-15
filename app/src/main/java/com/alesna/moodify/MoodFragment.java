@@ -1,6 +1,7 @@
 package com.alesna.moodify;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -9,10 +10,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alesna.moodify.adapter.historyMoodAdapter;
+import com.alesna.moodify.adapter.recommendedAdapterActivity1;
+import com.alesna.moodify.adapter.recommendedAdapterActivity2;
 import com.alesna.moodify.model.AuthToken;
 import com.alesna.moodify.model.HistoryMoodModel;
 import com.alesna.moodify.model.MoodMoodifyModel;
@@ -21,7 +25,6 @@ import com.alesna.moodify.model.RecommendedModel;
 import com.alesna.moodify.adapter.recommendedAdapter;
 import com.alesna.moodify.model.UserMoodifyModel;
 import com.alesna.moodify.service.ApiClient;
-import com.alesna.moodify.service.Mood;
 import com.alesna.moodify.service.MoodifyService;
 
 import org.greenrobot.eventbus.EventBus;
@@ -45,11 +48,17 @@ import retrofit2.Call;
  */
 public class MoodFragment extends Fragment {
     TextView recommended, txUsername;
-    RecyclerView mRvRecommended, mRvHistoryMood;
+    RecyclerView mRvRecommended,mRvRecommended2,mRvRecommended3, mRvHistoryMood;
     private recommendedAdapter adapterRecomm;
+    private recommendedAdapterActivity1 adapterRecomm2;
+    private recommendedAdapterActivity2 adapterRecomm3;
     private historyMoodAdapter adapterMood;
     private ArrayList<RecommendedModel> RecommendedList;
+    private ArrayList<RecommendedModel> RecommendedList2;
+    private ArrayList<RecommendedModel> RecommendedList3;
+
     private ArrayList<HistoryMoodModel> HistoryMoodList;
+    ImageButton btn_edit;
     MoodifyService service = ApiClient.retrofitClient().create(MoodifyService.class);
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -58,17 +67,42 @@ public class MoodFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_mood, container, false);
         txUsername = (TextView) v.findViewById(R.id.username);
         recommended = (TextView) v.findViewById(R.id.recomemnded);
+        btn_edit = (ImageButton) v.findViewById(R.id.btn_edit);
+        btn_edit.setOnClickListener(view -> {
+            startActivity(new Intent(getActivity(),ProfileActivity.class));
+        });
+
         onLoad();
+
         HistoryMoodList = new ArrayList<>();
         RecommendedList = new ArrayList<>();
+        RecommendedList2 = new ArrayList<>();
+        RecommendedList3 = new ArrayList<>();
+
         mRvHistoryMood = (RecyclerView) v.findViewById(R.id.rvHistoryMood);
         mRvRecommended = (RecyclerView) v.findViewById(R.id.rvRecommended);
-        adapterRecomm = new recommendedAdapter(RecommendedList);
+        mRvRecommended2 = (RecyclerView) v.findViewById(R.id.rvRecommended2);
+        mRvRecommended3 = (RecyclerView) v.findViewById(R.id.rvRecommended3);
+
+        adapterRecomm = new recommendedAdapter(RecommendedList,getContext());
+        adapterRecomm2 = new recommendedAdapterActivity1(RecommendedList2,getContext());
+        adapterRecomm3 = new recommendedAdapterActivity2(RecommendedList3,getContext());
+
         adapterMood = new historyMoodAdapter(HistoryMoodList);
+
         RecyclerView.LayoutManager lmHistoryMood = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL,false);
         RecyclerView.LayoutManager layoutManagerRvRecomm = new LinearLayoutManager( getContext(), LinearLayoutManager.HORIZONTAL,false);
+        RecyclerView.LayoutManager layoutManagerRvRecomm2 = new LinearLayoutManager( getContext(), LinearLayoutManager.HORIZONTAL,false);
+        RecyclerView.LayoutManager layoutManagerRvRecomm3 = new LinearLayoutManager( getContext(), LinearLayoutManager.HORIZONTAL,false);
         mRvRecommended.setLayoutManager(layoutManagerRvRecomm);
         mRvRecommended.setAdapter(adapterRecomm);
+
+        mRvRecommended2.setLayoutManager(layoutManagerRvRecomm2);
+        mRvRecommended2.setAdapter(adapterRecomm2);
+
+        mRvRecommended3.setLayoutManager(layoutManagerRvRecomm3);
+        mRvRecommended3.setAdapter(adapterRecomm3);
+
         mRvHistoryMood.setLayoutManager(lmHistoryMood);
         mRvHistoryMood.setAdapter(adapterMood);
 
@@ -80,14 +114,13 @@ public class MoodFragment extends Fragment {
         getMoodHistory(Preferences.getIdUser(getContext()));
     }
 
-    public void getRecommended(SpotifyService service){
+    public void getRecommended(SpotifyService spotifyService){
         RecommendedList.clear();
-        HashMap<String, Object> map = new HashMap<String, Object>();
-        map.put("country" , "id");
-        map.put("limit" , "20");
-        map.put("offset","5");
-
-        service.getPlaylistsForCategory("mood", map, new Callback<PlaylistsPager>() {
+        HashMap<String, Object> map1 = new HashMap<String, Object>();
+        map1.put("country" , "id");
+        map1.put("limit" , "20");
+        map1.put("offset","5");
+        spotifyService.getPlaylistsForCategory("mood", map1, new Callback<PlaylistsPager>() {
             @Override
             public void success(PlaylistsPager playlistsPager, Response response) {
                 List<PlaylistSimple> items = playlistsPager.playlists.items;
@@ -98,6 +131,55 @@ public class MoodFragment extends Fragment {
                     String uriImg = playlistsPager1.images.get(0).url;
                     RecommendedList.add(new RecommendedModel(id,name,uriImg));
                     adapterRecomm.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d("test",error.toString());
+                Toast toast = Toast.makeText(getActivity().getApplicationContext(), error.toString(), Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+
+        HashMap<String, Object> map2 = new HashMap<String, Object>();
+        map2.put("country" , "id");
+        map2.put("limit" , "12");
+        map2.put("offset","5");
+
+        spotifyService.getPlaylistsForCategory("workout", map2, new Callback<PlaylistsPager>() {
+            @Override
+            public void success(PlaylistsPager playlistsPager, Response response) {
+                List<PlaylistSimple> items = playlistsPager.playlists.items;
+                for(PlaylistSimple playlistsPager1 : items){
+                    Log.d("test",playlistsPager1.id + ' ' +  playlistsPager1.name + ' ' + playlistsPager1.images.get(0).url);
+                    String id = playlistsPager1.id;
+                    String name = playlistsPager1.name;
+                    String uriImg = playlistsPager1.images.get(0).url;
+                    RecommendedList2.add(new RecommendedModel(id,name,uriImg));
+                    adapterRecomm2.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d("test",error.toString());
+                Toast toast = Toast.makeText(getActivity().getApplicationContext(), error.toString(), Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+
+        spotifyService.getPlaylistsForCategory("travel", map1, new Callback<PlaylistsPager>() {
+            @Override
+            public void success(PlaylistsPager playlistsPager, Response response) {
+                List<PlaylistSimple> items = playlistsPager.playlists.items;
+                for(PlaylistSimple playlistsPager1 : items){
+                    Log.d("test",playlistsPager1.id + ' ' +  playlistsPager1.name + ' ' + playlistsPager1.images.get(0).url);
+                    String id = playlistsPager1.id;
+                    String name = playlistsPager1.name;
+                    String uriImg = playlistsPager1.images.get(0).url;
+                    RecommendedList3.add(new RecommendedModel(id,name,uriImg));
+                    adapterRecomm3.notifyDataSetChanged();
                 }
             }
 

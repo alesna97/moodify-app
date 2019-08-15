@@ -183,7 +183,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 >
-
+                <ImageButton
+                    android:id="@+id/btn_track"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/btn_ripple"
+                    android:src="@drawable/btn_track"
+                    android:layout_margin="5dp"/>
                 <ImageButton
                     android:id="@+id/ConnectButton"
                     android:layout_width="40dp"
@@ -205,7 +211,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Status : "
+                    android:fontFamily="@font/montserrat_bold"
+                    android:id="@+id/txstatus"/>
                 <ImageView
+                    android:id="@+id/ic_activity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_activity_monitoring"/>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activity"
+                        android:id="@+id/txactivity"/>
+                <ImageView
+                    android:layout_marginLeft="8dp"
                     android:id="@+id/heart_rate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -218,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:scrollHorizontally="false"
                     android:layout_gravity="center"
-                    android:text="scan to measure"/>
+                    android:text="Heart Rate"/>
             </LinearLayout>
 
         </LinearLayout>

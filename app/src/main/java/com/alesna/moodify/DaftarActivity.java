@@ -1,5 +1,8 @@
 package com.alesna.moodify;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -7,9 +10,14 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +33,14 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 public class DaftarActivity extends AppCompatActivity {
     ProgressDialog mProgressDialog;
     Button mBtnRegister;
     TextView  mBtnLogin;
-    EditText txt_username, txt_password, txt_confirm_password, txt_email, txt_tgl_lahir;
+    EditText txt_username, txt_password, txt_confirm_password, txt_email, txt_name;
+    DatePicker txt_tgl_lahir;
     Intent intent;
 
     int success;
@@ -43,7 +54,6 @@ public class DaftarActivity extends AppCompatActivity {
     private static final String TAG_MESSAGE = "message";
 
     String tag_json_obj = "json_obj_req";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,34 +80,61 @@ public class DaftarActivity extends AppCompatActivity {
         txt_password = (EditText) findViewById(R.id.password);
         txt_email = (EditText) findViewById(R.id.email);
         txt_username = (EditText) findViewById(R.id.username);
-        txt_tgl_lahir = (EditText) findViewById(R.id.tgl_lahir);
-
+        txt_tgl_lahir = (DatePicker) findViewById(R.id.tgl_lahir);
+        txt_name = (EditText) findViewById(R.id.name);
     }
+
 
     public void registerButton (View v){
         String username = txt_username.getText().toString();
         String password = txt_password.getText().toString();
         String confirm_password = txt_confirm_password.getText().toString();
+        String name = txt_name.getText().toString();
         String email = txt_email.getText().toString();
-        String tgl_lahir = txt_tgl_lahir.getText().toString();
+        String tgl_lahir = txt_tgl_lahir.getDayOfMonth()+ " - " + txt_tgl_lahir.getMonth() + " - " + txt_tgl_lahir.getYear();
         if (connectivityManager.getActiveNetworkInfo() != null
                 && connectivityManager.getActiveNetworkInfo().isAvailable()
                 && connectivityManager.getActiveNetworkInfo().isConnected()) {
-            checkRegister(username, password, confirm_password,email,tgl_lahir);
+            final TextView message = new TextView(this);
+            final SpannableString s = new SpannableString(getApplicationContext().getText(R.string.privacy_policy));
+            Linkify.addLinks(s, Linkify.WEB_URLS);
+            message.setText(s);
+            message.setMovementMethod(LinkMovementMethod.getInstance());
+
+            new SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                    .setTitleText("Terms of Services")
+                    .setConfirmText("Accept")
+                    .setCustomView(message)
+                    .setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            sDialog.dismissWithAnimation();
+                            checkRegister(username, password, confirm_password,email,tgl_lahir, name);
+                        }
+                    })
+                    .setCancelButton("Cancel", new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sDialog) {
+                            sDialog.dismissWithAnimation();
+                        }
+                    })
+                    .show();
         } else {
             Toast.makeText(getApplicationContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
         }
+
     }
 
-    private void checkRegister(final String username, final String password, final String confirm_password, final String email,final String tgl_lahir) {
-        mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Register ...");
-        showDialog();
+    private void checkRegister(final String username, final String password, final String confirm_password, final String email,final String tgl_lahir, final String name) {
+
+        SweetAlertDialog pDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
+        pDialog.getProgressHelper().setBarColor(R.color.colorPrimary);
+        pDialog.setTitleText("Register");
+        pDialog.setCancelable(false);
+        pDialog.show();
 
         StringRequest strReq = new StringRequest(Request.Method.POST, url, response -> {
             Log.e(TAG, "Register Response: " + response.toString());
-            hideDialog();
 
             try {
                 JSONObject jObj = new JSONObject(response);
@@ -105,22 +142,36 @@ public class DaftarActivity extends AppCompatActivity {
 
                 // Check for error node in json
                 if (success == 1) {
-
                     Log.e("Successfully Register!", jObj.toString());
-
-                    Toast.makeText(getApplicationContext(),
-                            jObj.getString(TAG_MESSAGE), Toast.LENGTH_LONG).show();
-
+                    pDialog.dismissWithAnimation();
+                    SweetAlertDialog newDialog = new SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE);
+                            newDialog.setTitle(jObj.getString(TAG_MESSAGE));
+                            newDialog.setConfirmButton("OK", new SweetAlertDialog.OnSweetClickListener() {
+                                @Override
+                                public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                    Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                            });
+                            newDialog.show();
                     txt_username.setText("");
                     txt_password.setText("");
                     txt_confirm_password.setText("");
                     txt_email.setText("");
-                    txt_tgl_lahir.setText("");
-
+                    txt_name.setText("");
+                    txt_tgl_lahir.clearFocus();
                 } else {
-                    Toast.makeText(getApplicationContext(),
-                            jObj.getString(TAG_MESSAGE), Toast.LENGTH_LONG).show();
-
+                    pDialog.dismissWithAnimation();
+                    SweetAlertDialog newDialog = new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE);
+                    newDialog.setTitle(jObj.getString(TAG_MESSAGE));
+                    newDialog.setConfirmButton("OK", new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            newDialog.dismissWithAnimation();
+                        }
+                    });
+                    newDialog.show();
                 }
             } catch (JSONException e) {
                 // JSON error
@@ -131,8 +182,6 @@ public class DaftarActivity extends AppCompatActivity {
             Log.e(TAG, "Login Error: " + error.getMessage());
             Toast.makeText(getApplicationContext(),
                     error.getMessage(), Toast.LENGTH_LONG).show();
-
-            hideDialog();
 
         }) {
 
@@ -145,6 +194,7 @@ public class DaftarActivity extends AppCompatActivity {
                 params.put("confirm_password", confirm_password);
                 params.put("email", email);
                 params.put("tgl_lahir", tgl_lahir);
+                params.put("name", name);
 
                 return params;
             }

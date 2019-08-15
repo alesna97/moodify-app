@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.alesna.moodify.adapter.playlistAdapter;
 import com.alesna.moodify.model.AuthToken;
@@ -28,6 +29,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import jp.wasabeef.picasso.transformations.BlurTransformation;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Image;
@@ -77,20 +79,17 @@ public class SongsFragment extends Fragment {
         return v;
     }
 
-    public void checkRecentPlaylist(SpotifyService service){
-        if (newPlaylist == false) {
-            if(Preferences.getPlaylistId(getContext()) == null){
-                txTitle.setText("You're just arrived here, go scan your mood");
-            }else{
-                txTitle.setText(userModel.getUserId());
-                onLoad(service,userModel.getUserId(), Preferences.getPlaylistId(getContext()));
-            }
+    public void checkRecentPlaylist(SpotifyService service, String playlistId){
+        if(playlistId == ""){
+            txTitle.setText("You're just arrived here, go scan your mood");
+        }else{
+            onLoad(service,Preferences.getIdUser(getContext()), playlistId);
         }
     }
 
     public void onLoad(SpotifyService service, String userId, String playlistId){
-        getPlaylistTracks(service,userId,playlistId);
-        getPlaylist(service,userId,playlistId);
+            getPlaylistTracks(service,userId,playlistId);
+            getPlaylist(service,userId,playlistId);
     }
 
     public void setService(SpotifyService spotifyService){
@@ -139,34 +138,38 @@ public class SongsFragment extends Fragment {
 
     public void getPlaylistTracks(SpotifyService service,String userId, String playlistId){
         PlaylistTracks.clear();
-        service.getPlaylistTracks(userId, playlistId, new Callback<Pager<PlaylistTrack>>() {
-            @Override
-            public void success(Pager<PlaylistTrack> playlistTrackPager, Response response) {
-                List<PlaylistTrack> items = playlistTrackPager.items;
-                //PlaylistTracks.clear();
-                for(PlaylistTrack playlistTrack : items){
-                    Log.d("TEST", playlistTrack.track.album.images.get(0).url
-                            + "-" + playlistTrack.track.id
-                            + "-" + playlistTrack.track.artists.get(0).name
-                            + "-" + playlistTrack.track.name
-                            + "-" + playlistTrack.track.duration_ms);
+        try {
+            service.getPlaylistTracks(userId, playlistId, new Callback<Pager<PlaylistTrack>>() {
+                @Override
+                public void success(Pager<PlaylistTrack> playlistTrackPager, Response response) {
+                    List<PlaylistTrack> items = playlistTrackPager.items;
+                    //PlaylistTracks.clear();
+                    for (PlaylistTrack playlistTrack : items) {
+                        Log.d("TEST", playlistTrack.track.album.images.get(0).url
+                                + "-" + playlistTrack.track.id
+                                + "-" + playlistTrack.track.artists.get(0).name
+                                + "-" + playlistTrack.track.name
+                                + "-" + playlistTrack.track.duration_ms);
 
-                    String trackName = playlistTrack.track.name;
-                    String artistName = playlistTrack.track.artists.get(0).name;
-                    String duration = convertMilliSeconds(playlistTrack.track.duration_ms);
-                    String album_url = playlistTrack.track.album.images.get(0).url;
+                        String trackName = playlistTrack.track.name;
+                        String artistName = playlistTrack.track.artists.get(0).name;
+                        String duration = convertMilliSeconds(playlistTrack.track.duration_ms);
+                        String album_url = playlistTrack.track.album.images.get(0).url;
 
-                    //PlaylistTracks.add(new PlaylistModel(trackName,artistName,duration));
-                    PlaylistTracks.add(new PlaylistModel( trackName,artistName,duration,album_url));
-                    adapter.notifyDataSetChanged();
+                        //PlaylistTracks.add(new PlaylistModel(trackName,artistName,duration));
+                        PlaylistTracks.add(new PlaylistModel(trackName, artistName, duration, album_url));
+                        adapter.notifyDataSetChanged();
+                    }
                 }
-            }
 
-            @Override
-            public void failure(RetrofitError error) {
-                Log.e("TAG", error.toString());
-            }
-        });
+                @Override
+                public void failure(RetrofitError error) {
+                    Log.e("TAG", error.toString());
+                }
+            });
+        }catch (Exception e){
+        Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+    }
     }
 
     public String convertMilliSeconds (long ms){
@@ -189,8 +192,7 @@ public class SongsFragment extends Fragment {
 
     @Subscribe
     public void onMessageEvent(PlaylistIdEvent event) {
-        onLoad(getService(),userModel.getUserId(), event.getPlaylistId());
-        newPlaylist = true;
+        onLoad(getService(),Preferences.getIdUser(getContext()), event.getPlaylistId());
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
@@ -198,6 +200,6 @@ public class SongsFragment extends Fragment {
         setService(event.spotifyService());
         userModel = new UserModel();
         userModel.getUserSpotify(event.spotifyService());
-        checkRecentPlaylist(getService());
+        checkRecentPlaylist(event.spotifyService(),Preferences.getPlaylistId(getContext()));
     }
 }

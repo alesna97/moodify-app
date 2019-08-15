@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +33,8 @@ import com.alesna.moodify.model.MoodMoodifyModel;
 import com.alesna.moodify.model.Preferences;
 import com.alesna.moodify.service.ApiClient;
 import com.alesna.moodify.service.ConnWearableEvent;
+import com.alesna.moodify.service.EventActivityTracking;
+import com.alesna.moodify.service.EventActivityType;
 import com.alesna.moodify.service.MoodifyService;
 import com.alesna.moodify.service.PlaylistIdEvent;
 import com.alesna.moodify.service.Mood;
@@ -59,6 +62,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -74,15 +78,16 @@ public class PlayerFragment extends Fragment {
 
     private SpotifyAppRemote mSpotifyAppRemote;
     ImageButton mConnectButton, mPlaybutton, mPauseButton, mNextButton, mPrevButton,
-            mRepeatButton, mShuffleButton;
+            mRepeatButton, mShuffleButton, mTrackButton;
     SeekBar mSeekBar;
-    TextView nowPlaying, mArtist, mTitle, mStatus, mStartDuration, mEndDuration;
+    TextView nowPlaying, mArtist, mTitle, mStatus, mStartDuration, mEndDuration, mActivity;
     ShadowImageView mCoverImage;
     TrackProgressBar mTrackProgressBar;
     SpinKitView mSpinkitView;
     Boolean device = false;
     int mHeartRate;
     Boolean isListeningHeartRate = false;
+    private SweetAlertDialog sweetAlertDialog;
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -110,6 +115,9 @@ public class PlayerFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_player, container, false);
 
+        mActivity = (TextView) v.findViewById(R.id.txactivity);
+        mTrackButton = (ImageButton) v.findViewById(R.id.btn_track);
+        mTrackButton.setOnClickListener(view -> onTrackClick(view));
         DeviceName = (TextView) v.findViewById(R.id.txtPhysicalAddress);
         txtByte = (TextView) v.findViewById(R.id.txtByte);
         //txtState = (TextView) v.findViewById(R.id.txtState);
@@ -138,7 +146,24 @@ public class PlayerFragment extends Fragment {
         mCoverImage = (ShadowImageView) v.findViewById(R.id.CoverImage);
         mSeekBar = (SeekBar) v.findViewById(R.id.seekbar);
         mTrackProgressBar = new TrackProgressBar(mSeekBar);
+        sweetAlertDialog = new SweetAlertDialog(getContext(), SweetAlertDialog.PROGRESS_TYPE);
         return v;
+    }
+
+    public void onTrackClick(View v){
+        EventBus.getDefault().postSticky(new EventActivityTracking(true));
+    }
+    public void showLoading (SweetAlertDialog sweetAlertDialog){
+        sweetAlertDialog.getProgressHelper().setBarColor(R.color.colorPrimary);
+        sweetAlertDialog.setContentText("Getting your mood please wait :)");
+        sweetAlertDialog.setTitleText("Scanning");
+        sweetAlertDialog.show();
+    }
+
+    public void dismissLoading (SweetAlertDialog sweetAlertDialog){
+        if(sweetAlertDialog.isShowing()){
+            sweetAlertDialog.dismissWithAnimation();
+        }
     }
 
     //WEARABLE DEVICE
@@ -154,20 +179,6 @@ public class PlayerFragment extends Fragment {
           //  Toast toast = Toast.makeText(getActivity().getApplicationContext(),"Wrong Device !", Toast.LENGTH_SHORT);
           //  toast.show();
         //}
-    }
-
-    void getBoundedDevice() {
-
-        mDeviceName = getArguments().getString("name");
-        mDeviceAddress = getArguments().getString("add");
-        DeviceName.setText(mDeviceAddress);
-
-        Set<BluetoothDevice> boundedDevice = bluetoothAdapter.getBondedDevices();
-        for (BluetoothDevice bd : boundedDevice) {
-            if (bd.getName().contains("MI Band 3")) {
-                DeviceName.setText(bd.getAddress());
-            }
-        }
     }
 
     void initializeObjects() {
@@ -305,6 +316,9 @@ public class PlayerFragment extends Fragment {
             Toast toast = Toast.makeText(getActivity().getApplicationContext(),"Connect Device First !", Toast.LENGTH_SHORT);
             toast.show();
         }else{
+            showLoading(sweetAlertDialog);
+            startScanHeartRate();
+            startScanHeartRate();
             startScanHeartRate();
         }
     }
@@ -322,6 +336,7 @@ public class PlayerFragment extends Fragment {
         }
     }
     void startScanHeartRate() {
+
         txtByte.setText("Scanning");
         BluetoothGattCharacteristic bchar = bluetoothGatt.getService(CustomBluetoothProfile.HeartRate.service)
                 .getCharacteristic(CustomBluetoothProfile.HeartRate.controlCharacteristic);
@@ -496,7 +511,19 @@ public class PlayerFragment extends Fragment {
             public void onResponse(Call<MoodMoodifyModel> call, Response<MoodMoodifyModel> response) {
                 MoodMoodifyModel res = response.body();
                 if(response.isSuccessful()){
+                    dismissLoading(sweetAlertDialog);
                     Log.d("test", res.getMessage());
+                    SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(getContext(), SweetAlertDialog.SUCCESS_TYPE);
+                    sweetAlertDialog.setTitleText("Mood Detected");
+                    sweetAlertDialog.setContentText("Are you Feeling "+ id_mood + " \n Heart Rate "+heart_rate +" Bpm");
+                    sweetAlertDialog.setConfirmButton("Ok", new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            sweetAlertDialog.dismissWithAnimation();
+                        }
+                    });
+                    sweetAlertDialog.show();
+                    txtByte.setText(heart_rate+" Bpm");
                 }else{
                     Log.d("test", res.getMessage());
                 }
@@ -555,18 +582,12 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            //Log.v("test", "onCharacteristicRead");
             byte[] data = characteristic.getValue();
-            //String x = Arrays.toString(data);
             byte[] slice = Arrays.copyOfRange(data, 1,2);
-            int value = slice[0];
-            txtByte.setText(Integer.toString(value));
             mHeartRate = slice[0];
-            txtByte.setText(Integer.toString(mHeartRate));
             Mood mood = new Mood();
             mood.getMoodResult(mHeartRate);
             mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
-            DeviceName.setText(mood.getMood());
             Preferences.clearPlaylistID(getContext());
             Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
             EventBus.getDefault().post(new PlaylistIdEvent(mood.getPlaylist_uri()));
@@ -585,19 +606,14 @@ public class PlayerFragment extends Fragment {
             Log.v("test", "onCharacteristicChanged");
             byte[] data = characteristic.getValue();
             byte[] slice = Arrays.copyOfRange(data, 1,2);
-            int value = slice[0];
-            txtByte.setText(Integer.toString(value));
             mHeartRate = slice[0];
-            txtByte.setText(Integer.toString(mHeartRate));
             Mood mood = new Mood();
             mood.getMoodResult(mHeartRate);
             mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+mood.getPlaylist_uri());
-            Log.d("test",Preferences.getFcmToken(getContext()));
             sendNotification(String.valueOf(mHeartRate),mood.getMood());
-            DeviceName.setText(mood.getMood());
             Preferences.clearPlaylistID(getContext());
             Preferences.setPlaylistId(getContext(), mood.getPlaylist_uri());
-            EventBus.getDefault().post(new PlaylistIdEvent(mood.getPlaylist_uri()));
+            EventBus.getDefault().postSticky(new PlaylistIdEvent(mood.getPlaylist_uri()));
             postMood(Preferences.getIdUser(getContext()),mood.getMood(),String.valueOf(mHeartRate));
         }
 
@@ -649,9 +665,18 @@ public class PlayerFragment extends Fragment {
         startConnecting(event.getDevice_name(),event.getMac_address());
     }
 
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onEvent(PlaylistIdEvent event) {
+        mSpotifyAppRemote.getPlayerApi().play("spotify:user:spotify:playlist:"+event.getPlaylistId());
+    }
     @Override
     public void onStop() {
         EventBus.getDefault().unregister(this);
         super.onStop();
+    }
+
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onEvent(EventActivityType event) {
+      mActivity.setText(event.getActivityType());
     }
 }

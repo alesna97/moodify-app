@@ -12,7 +12,10 @@ public class UserMoodifyModel {
         @SerializedName("username")
         private String username;
 
-        @SerializedName("email")
+    @SerializedName("name")
+    private String name;
+
+    @SerializedName("email")
         private String email;
 
         @SerializedName("password")
@@ -20,6 +23,7 @@ public class UserMoodifyModel {
 
         @SerializedName("tgl_lahir")
         private String tgl_lahir;
+
 
     public void setTgl_lahir(String tgl_lahir) {
         this.tgl_lahir = tgl_lahir;
@@ -39,6 +43,14 @@ public class UserMoodifyModel {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getId() {

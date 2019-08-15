@@ -2,7 +2,7 @@
     <string name="app_name">Moodify</string>
     <string name="Player">Now Playing</string>
     <string name="Songs">Songs</string>
-    <string name="Mood">Mood</string>
+    <string name="Mood">History</string>
 
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>
@@ -28,5 +28,28 @@
     <string name="fcm_message">FCM Message</string>
     <!-- FCM -->
     <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
+
+    <!-- SLIDER -->
+    <string name="title_activity_welcome">Home Screen</string>
+    <string name="next">NEXT</string>
+    <string name="skip">SKIP</string>
+    <string name="start">GOT IT</string>
+
+    <string name="slide_1_title">Welcome To Moodify !</string>
+    <string name="slide_1_desc">Huhuu.. :(</string>
+
+    <string name="slide_2_title">Mood Detection</string>
+    <string name="slide_2_desc">Music For Your Mood !</string>
+
+    <string name="slide_3_title">Activity Detection</string>
+    <string name="slide_3_desc">Play Songs To Keep Up With Your Activity !</string>
+
+    <string name="slide_4_title">Wearable Device</string>
+    <string name="slide_4_desc"> Connect Your Wearable Device</string>
+
+    <string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
+    <string name="play_again">Play Again</string>
+    <string name="privacy_policy">By registering you agree to the developer to use your personal data on the \napplication as material for research and application development.\n
+                            Moodify Privacy Policy : http://privacy-policy.moodify.kertasdev.my.id</string>
 
 </resources>

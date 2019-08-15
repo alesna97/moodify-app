@@ -1,5 +1,6 @@
 package com.alesna.moodify;
 
+import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.ProgressDialog;
@@ -25,6 +26,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -84,9 +87,8 @@ public class LoginActivity extends AppCompatActivity {
         mTxtPassword = (EditText) findViewById(R.id.password);
 
         //cek session
-        sharedPreferences = getSharedPreferences(my_shared_preferences, Context.MODE_PRIVATE);
-        session = sharedPreferences.getBoolean(session_status, false);
-        id = sharedPreferences.getString(TAG_ID, null);
+        session = Preferences.getSession(this);
+        id = Preferences.getIdUser(this);
 
         if (session){
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -107,11 +109,29 @@ public class LoginActivity extends AppCompatActivity {
                             && connectivityManager.getActiveNetworkInfo().isConnected()) {
                         checkLogin(username, password);
                     }else{
-                        Toast.makeText(getApplicationContext(),"Tidak ada koneksi internet", Toast.LENGTH_SHORT).show();
+                            SweetAlertDialog newDialog = new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE);
+                            newDialog.setTitle("Error");
+                            newDialog.setContentText("No Internet Connection");
+                            newDialog.setConfirmButton("OK", new SweetAlertDialog.OnSweetClickListener() {
+                                @Override
+                                public void onClick(SweetAlertDialog sweetAlertDialog) {
+                                    newDialog.dismissWithAnimation();
+                                }
+                            });
+                            newDialog.show();
                     }
 
                 }else{
-                    Toast.makeText(getApplicationContext(), "Kolom tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                    SweetAlertDialog newDialog = new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE);
+                    newDialog.setTitle("Error");
+                    newDialog.setContentText("Username and Password Cannot Be Empty !");
+                    newDialog.setConfirmButton("OK", new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            newDialog.dismissWithAnimation();
+                        }
+                    });
+                    newDialog.show();
             }
         }
 
@@ -123,14 +143,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void checkLogin(final String username, final String password){
-        mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setMessage("Loging in ...");
-        showDialog();
+        SweetAlertDialog pDialog = new SweetAlertDialog(this, SweetAlertDialog.PROGRESS_TYPE);
+        pDialog.getProgressHelper().setBarColor(R.color.colorPrimary);
+        pDialog.setTitleText("Loging in..");
+        pDialog.setCancelable(false);
+        pDialog.show();
 
         StringRequest strReq = new StringRequest(Request.Method.POST, url, response -> {
             Log.e(TAG, "Login Response: " + response.toString()+ url);
-            hideDialog();
 
             try {
                 JSONObject jObj = new JSONObject(response);
@@ -140,18 +160,12 @@ public class LoginActivity extends AppCompatActivity {
                 if (success == 1) {
                     String username1 = jObj.getString(TAG_USERNAME);
                     String id = jObj.getString(TAG_ID);
-
                     Log.e("Successfully Login!", jObj.toString());
-
-                    Toast.makeText(getApplicationContext(), jObj.getString(TAG_MESSAGE), Toast.LENGTH_LONG).show();
-
+                    pDialog.dismissWithAnimation();
                     // menyimpan login ke session
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean(session_status, true);
-                    //editor.putString(TAG_ID, id);
+                    Preferences.setSession(this,true);
                     Preferences.setIdUser(this, id);
-                    editor.putString(TAG_USERNAME, username1);
-                    editor.commit();
+                    Preferences.setUsername(this,username1);
 
                     // Memanggil main activity
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -160,9 +174,16 @@ public class LoginActivity extends AppCompatActivity {
                     finish();
                     startActivity(intent);
                 } else {
-                    Toast.makeText(getApplicationContext(),
-                            jObj.getString(TAG_MESSAGE), Toast.LENGTH_LONG).show();
-
+                    pDialog.dismissWithAnimation();
+                    SweetAlertDialog newDialog = new SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE);
+                    newDialog.setTitle(jObj.getString(TAG_MESSAGE));
+                    newDialog.setConfirmButton("OK", new SweetAlertDialog.OnSweetClickListener() {
+                        @Override
+                        public void onClick(SweetAlertDialog sweetAlertDialog) {
+                            newDialog.dismissWithAnimation();
+                        }
+                    });
+                    newDialog.show();
                 }
             } catch (JSONException e) {
                 // JSON error
@@ -173,8 +194,6 @@ public class LoginActivity extends AppCompatActivity {
             Log.e(TAG, "Login Error: " + error.getMessage());
             Toast.makeText(getApplicationContext(),
                     error.getMessage(), Toast.LENGTH_LONG).show();
-
-            hideDialog();
 
         }) {
 

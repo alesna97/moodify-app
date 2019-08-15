@@ -2,6 +2,7 @@ package com.alesna.moodify.service;
 
 import com.alesna.moodify.model.FcmModel;
 import com.alesna.moodify.model.MoodMoodifyModel;
+import com.alesna.moodify.model.PostModel;
 import com.alesna.moodify.model.UserMoodifyModel;
 
 import java.util.List;
@@ -31,4 +32,13 @@ public interface MoodifyService {
     @FormUrlEncoded
     @POST("api/send-fcm-notification"+API_KEY)
     Call<FcmModel> sendFcmNotification(@Field("token") String token, @Field("heart_rate") String heart_rate,@Field("id_mood") String id_mood);
+
+    @FormUrlEncoded
+    @POST("api/send-fcm-notification-activity"+API_KEY)
+    Call<FcmModel> sendFcmNotificationActivity(@Field("token") String token, @Field("activity") String activity);
+
+    @FormUrlEncoded
+    @POST("api/edit-user"+API_KEY)
+    Call<PostModel> editProfile(@Field("id") String id, @Field("username") String username,
+                                @Field("name") String name, @Field("email") String email,@Field("birth") String birth);
 }

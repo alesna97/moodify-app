@@ -6,18 +6,22 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
 
     <application
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:replace="android:icon,android:theme"
         android:name=".service.AppController"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_moodify"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/ic_moodify"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".MainMenuActivity"></activity>
+        <activity android:name=".WelcomeActivity"></activity>
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".MainMenuActivity" android:launchMode="singleTop"/>
         <activity
             android:name=".ScanDeviceActivity"
             android:parentActivityName=".MainActivity" />
@@ -38,6 +42,7 @@
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
             android:value="com.alesna.moodify.MainActivity" />
+
         <service
             android:name=".service.MyFirebaseMessagingService"
             android:exported="false">
@@ -45,6 +50,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <service android:name=".service.ActivityRecognitionService" />
     </application>
 
 </manifest>
